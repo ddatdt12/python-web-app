@@ -27,25 +27,41 @@ pipeline {
         DOCKER_TAG="${GIT_BRANCH.tokenize('/').pop()}-${GIT_COMMIT.substring(0,7)}"
       }
       steps {
-        sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} . "
-        sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
-        sh "docker image ls | grep ${DOCKER_IMAGE}"
         withCredentials([usernamePassword(credentialsId: 'docker-hub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
             sh 'echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin'
-            sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
+        }
+
+        sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} . "
+        sh "docker image ls | grep ${DOCKER_IMAGE}"
+        sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
+        script{
+          if (env.BRANCH_NAME == 'master') {
+            sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
             sh "docker push ${DOCKER_IMAGE}:latest"
+            
+            sh "docker image rm ${DOCKER_IMAGE}:latest"
+          }
         }
 
         //clean to save disk
         sh "docker image rm ${DOCKER_IMAGE}:${DOCKER_TAG}"
-        sh "docker image rm ${DOCKER_IMAGE}:latest"
+      }
+    }
+
+    stage("deploy") {
+      agent { node {label 'master'}}
+      when { branch "main" }
+      steps {
+        // sh "ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/id_rsa"
+        sh "docker pull ${DOCKER_IMAGE}:latest"
+        sh "docker run --rm -it -p 5000:5000 ${DOCKER_IMAGE}:latest"
       }
     }
   }
 
   post {
     success {
-      echo "SUCCESSFUL"
+      echo "SUCCESSFULL"
     }
     failure {
       echo "FAILED"
