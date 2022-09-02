@@ -17,8 +17,7 @@ import json
 def test_api_monitor(client):
     resp = client.get("/api/monitor")
 
-    assert 1 - 1 == 0
-    assert 2 - 1 == 1
+    assert 1 + 1 == 2
     assert resp.status_code == 200
     assert resp.headers["Content-Type"] == "application/json"
     resp_payload = json.loads(resp.data)
