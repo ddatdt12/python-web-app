@@ -3,7 +3,7 @@ pipeline {
   agent none
 
   environment {
-    DOCKER_IMAGE = "ddatdt/python-web-app"
+    DOCKER_IMAGE = "ddatdt12/python-web-app"
   }
 
   stages {
