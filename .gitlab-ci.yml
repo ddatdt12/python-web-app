@@ -1,5 +1,5 @@
 variables:
-  IMAGE_NAME: ddatdt12/demo-app
+  IMAGE_NAME: ddatdt12/python-web-app
   IMAGE_TAG: python-app-1.0
 
 stages:
